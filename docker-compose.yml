@@ -1,0 +1,53 @@
+version: '3'
+
+services:
+  app-nginx:
+    build:
+      context: ./app/docker/nginx
+    volumes:
+      - ./app:/app
+    ports:
+      - "8080:80"
+    links:
+      - app-php
+
+  app-php:
+    build:
+      context: app/docker/php-fpm
+    volumes:
+      - ./app:/app
+    links:
+      - app-mysql
+    environment:
+      - "MYSQL_USER=app"
+      - "MYSQL_PASSWORD=secret"
+      - "MYSQL_DATABASE=app"
+
+  app-cli:
+    build:
+      context: ./app/docker/php-cli
+    volumes:
+      - ./app:/app
+    links:
+      - app-mysql
+    environment:
+      - "MYSQL_USER=app"
+      - "MYSQL_PASSWORD=secret"
+      - "MYSQL_DATABASE=app"
+    tty: true
+
+  app-mysql:
+    image: mysql:8.0
+    platform: linux/x86_64
+    volumes:
+      - app-mysql:/var/lib/mysql
+    ports:
+      - "33061:3306"
+    environment:
+      - "MYSQL_ROOT_PASSWORD=secret"
+      - "MYSQL_USER=app"
+      - "MYSQL_PASSWORD=secret"
+      - "MYSQL_DATABASE=app"
+
+volumes:
+  app-mysql:
