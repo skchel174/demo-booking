@@ -2,8 +2,16 @@
     "name": "demo/booking",
     "autoload": {
         "psr-4": {
-            "Root\\App\\": "src/"
+            "App\\": "src/"
         }
     },
-    "require": {}
+    "require-dev": {
+        "symfony/var-dumper": "^6.1"
+    },
+    "require": {
+        "symfony/http-foundation": "^6.1",
+        "symfony/routing": "^6.1",
+        "symfony/yaml": "^6.1",
+        "symfony/config": "^6.1"
+    }
 }
