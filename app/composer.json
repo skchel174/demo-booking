@@ -1,0 +1,9 @@
+{
+    "name": "demo/booking",
+    "autoload": {
+        "psr-4": {
+            "Root\\App\\": "src/"
+        }
+    },
+    "require": {}
+}
