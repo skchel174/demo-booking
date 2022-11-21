@@ -7,21 +7,27 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Routing\Loader\YamlFileLoader;
-use Symfony\Component\Routing\Matcher\UrlMatcher;
 use Symfony\Component\Routing\RequestContext;
+use Symfony\Component\Routing\Router;
 
-require_once dirname(__DIR__) . '/vendor/autoload.php';
+define('BASE_DIR', dirname(__DIR__));
+
+require_once BASE_DIR . '/vendor/autoload.php';
 
 try {
-    $fileLocator = new FileLocator([dirname(__DIR__)]);
+    $fileLocator = new FileLocator(BASE_DIR);
     $loader = new YamlFileLoader($fileLocator);
-    $routes = $loader->load('config/routes.yaml');
 
     $requestContext = new RequestContext();
     $requestContext->fromRequest($request = Request::createFromGlobals());
 
-    $urlMatcher = new UrlMatcher($routes, $requestContext);
-    $parameters = $urlMatcher->match($requestContext->getPathInfo());
+    $router = new Router(
+        $loader,
+        'config/routes.yaml',
+        ['cache_dir' => BASE_DIR . '/var/cache'],
+        $requestContext
+    );
+    $parameters = $router->match($requestContext->getPathInfo());
     $request->attributes->add($parameters);
 
     [$controllerName, $method] = explode('::', $parameters['_controller']);
