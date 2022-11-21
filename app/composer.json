@@ -10,6 +10,8 @@
     },
     "require": {
         "symfony/http-foundation": "^6.1",
-        "symfony/routing": "^6.1"
+        "symfony/routing": "^6.1",
+        "symfony/yaml": "^6.1",
+        "symfony/config": "^6.1"
     }
 }

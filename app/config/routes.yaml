@@ -1,0 +1,11 @@
+home:
+  path: '/'
+  controller: App\Controller\DemoController::index
+  methods: GET
+
+demo:
+  path: '/demo/{id}'
+  controller: App\Controller\DemoController::demo
+  methods: GET
+  requirements:
+    id: '\d+'
