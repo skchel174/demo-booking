@@ -2,15 +2,13 @@
 
 declare(strict_types=1);
 
-use App\Controller\DemoController;
-use App\Service\DemoService;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
-use Symfony\Component\Routing\Loader\YamlFileLoader;
+use Symfony\Component\Routing\Loader\YamlFileLoader as RoutesFileLoader;
+use Symfony\Component\DependencyInjection\Loader\YamlFileLoader as ServicesFileLoader;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\Router;
 
@@ -19,19 +17,17 @@ define('BASE_DIR', dirname(__DIR__));
 require_once BASE_DIR . '/vendor/autoload.php';
 
 try {
-    $containerBuilder = new ContainerBuilder();
+    $fileLocator = new FileLocator(BASE_DIR);
 
-    $containerBuilder->register(DemoService::class, DemoService::class);
-    $containerBuilder->register(DemoController::class, DemoController::class)
-        ->addArgument(new Reference(DemoService::class));
+    $containerBuilder = new ContainerBuilder();
+    $servicesLoader = new ServicesFileLoader($containerBuilder, $fileLocator);
+    $servicesLoader->load('config/services.yaml');
 
     $requestContext = new RequestContext();
     $requestContext->fromRequest($request = Request::createFromGlobals());
 
-    $fileLocator = new FileLocator(BASE_DIR);
-    $fileLoader = new YamlFileLoader($fileLocator);
     $router = new Router(
-        $fileLoader,
+        new RoutesFileLoader($fileLocator),
         'config/routes.yaml',
         ['cache_dir' => BASE_DIR . '/var/cache'],
         $requestContext,
