@@ -2,7 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Controller\DemoController;
+use App\Service\DemoService;
 use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
@@ -15,23 +19,30 @@ define('BASE_DIR', dirname(__DIR__));
 require_once BASE_DIR . '/vendor/autoload.php';
 
 try {
-    $fileLocator = new FileLocator(BASE_DIR);
-    $loader = new YamlFileLoader($fileLocator);
+    $containerBuilder = new ContainerBuilder();
+
+    $containerBuilder->register(DemoService::class, DemoService::class);
+    $containerBuilder->register(DemoController::class, DemoController::class)
+        ->addArgument(new Reference(DemoService::class));
 
     $requestContext = new RequestContext();
     $requestContext->fromRequest($request = Request::createFromGlobals());
 
+    $fileLocator = new FileLocator(BASE_DIR);
+    $fileLoader = new YamlFileLoader($fileLocator);
     $router = new Router(
-        $loader,
+        $fileLoader,
         'config/routes.yaml',
         ['cache_dir' => BASE_DIR . '/var/cache'],
-        $requestContext
+        $requestContext,
     );
+
     $parameters = $router->match($requestContext->getPathInfo());
     $request->attributes->add($parameters);
 
     [$controllerName, $method] = explode('::', $parameters['_controller']);
-    $controller = new $controllerName();
+    $controller = $containerBuilder->get($controllerName);
+
     /** @var Response $response */
     $response = $controller->$method($request);
     echo $response->getContent();

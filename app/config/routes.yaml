@@ -3,9 +3,7 @@ home:
   controller: App\Controller\DemoController::index
   methods: GET
 
-demo:
-  path: '/demo/{id}'
-  controller: App\Controller\DemoController::demo
+greeting:
+  path: '/greeting/{name?}'
+  controller: App\Controller\DemoController::greeting
   methods: GET
-  requirements:
-    id: '\d+'

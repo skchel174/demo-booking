@@ -2,20 +2,29 @@
 
 namespace App\Controller;
 
+use App\Service\DemoService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class DemoController
 {
-    public function index(): Response
+    private DemoService $service;
+
+    public function __construct(DemoService $service)
     {
-        return new Response('<h1>Home</h1>');
+        $this->service = $service;
     }
 
-    public function demo(Request $request): Response
+    public function index(): Response
     {
-        $id = $request->attributes->get('id');
+        return new Response("<h1>Home</h1>");
+    }
 
-        return new Response("<h1>Demo#$id</h1>");
+    public function greeting(Request $request): Response
+    {
+        $name = $request->attributes->get('name') ?: 'World';
+        $greeting = $this->service->greeting($name);
+
+        return new Response("<h1>$greeting</h1>");
     }
 }
