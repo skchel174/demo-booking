@@ -1,6 +1,6 @@
 services:
-  App\Service\DemoService:
-    class: App\Service\DemoService
   App\Controller\DemoController:
-    class: App\Controller\DemoController
-    arguments: ["@App\\Service\\DemoService"]
+    public: true
+    arguments: ['@App\Service\DemoService']
+
+  App\Service\DemoService: ~

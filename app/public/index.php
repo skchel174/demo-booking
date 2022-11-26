@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Dumper\PhpDumper;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
@@ -14,30 +15,52 @@ use Symfony\Component\Routing\Router;
 
 define('BASE_DIR', dirname(__DIR__));
 
+const DEBUG = true;
+
 require_once BASE_DIR . '/vendor/autoload.php';
 
 try {
-    $fileLocator = new FileLocator(BASE_DIR);
+    $configLocator = new FileLocator(BASE_DIR . '/config');
 
-    $containerBuilder = new ContainerBuilder();
-    $servicesLoader = new ServicesFileLoader($containerBuilder, $fileLocator);
-    $servicesLoader->load('config/services.yaml');
+    // Initialize Container
+    $file = BASE_DIR . '/var/cache/container.php';
+    $cachedContainer = 'CachedContainer';
 
+    if (file_exists($file)) {
+        require_once $file;
+        $container = new $cachedContainer();
+    } else {
+        $container = new ContainerBuilder();
+        $servicesLoader = new ServicesFileLoader($container, $configLocator);
+        $servicesLoader->load('services.yaml');
+        $container->compile();
+
+        if (!DEBUG) {
+            $dumper = new PhpDumper($container);
+            $containerDump = $dumper->dump(['class' => $cachedContainer]);
+            file_put_contents($file, $containerDump);
+        }
+    }
+
+    // Initialize Router
     $requestContext = new RequestContext();
     $requestContext->fromRequest($request = Request::createFromGlobals());
 
+    $routerCache = !DEBUG ? BASE_DIR . '/var/cache' : null;
+
     $router = new Router(
-        new RoutesFileLoader($fileLocator),
-        'config/routes.yaml',
-        ['cache_dir' => BASE_DIR . '/var/cache'],
+        new RoutesFileLoader($configLocator),
+        'routes.yaml',
+        ['cache_dir' => $routerCache],
         $requestContext,
     );
 
+    // Routing
     $parameters = $router->match($requestContext->getPathInfo());
     $request->attributes->add($parameters);
 
     [$controllerName, $method] = explode('::', $parameters['_controller']);
-    $controller = $containerBuilder->get($controllerName);
+    $controller = $container->get($controllerName);
 
     /** @var Response $response */
     $response = $controller->$method($request);
