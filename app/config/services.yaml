@@ -1,6 +1,7 @@
 services:
-  App\Controller\DemoController:
+  _defaults:
+    autowire: true
     public: true
-    arguments: ['@App\Service\DemoService']
 
-  App\Service\DemoService: ~
+  App\:
+    resource: '../src/'
