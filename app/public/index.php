@@ -35,7 +35,8 @@ try {
     // Call handler
     /** @var Response $response */
     $response = $controller->$method($request);
-    echo $response->getContent();
+    $response->send();
 } catch (ResourceNotFoundException $e) {
-    echo '<h1>404 Not Found</h1>';
+    $response = new Response('<h1>404 Not Found</h1>', Response::HTTP_NOT_FOUND);
+    $response->send();
 }
