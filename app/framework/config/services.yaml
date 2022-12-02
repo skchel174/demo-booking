@@ -11,4 +11,4 @@ services:
   Symfony\Component\Routing\Router:
     public: true
     factory: '@Framework\Router\RouterFactory'
-    arguments: [ '%debug%' ]
+    arguments: [ '@service_container' ]
