@@ -2,7 +2,8 @@
     "name": "demo/booking",
     "autoload": {
         "psr-4": {
-            "App\\": "src/"
+            "App\\": "src/",
+            "Framework\\": "framework/"
         }
     },
     "require-dev": {
