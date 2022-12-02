@@ -3,14 +3,5 @@ services:
     autowire: true
     public: true
 
-  Symfony\Component\Routing\Router:
-    class: Symfony\Component\Routing\Router
-    factory: '@App\Framework\Router\RouterFactory'
-    arguments: ['%debug%']
-
-  App\Framework\Router\RouterFactory: ~
-
   App\:
     resource: '../src/'
-    exclude:
-      - '../src/Framework/'

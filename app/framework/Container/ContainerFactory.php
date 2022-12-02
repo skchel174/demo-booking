@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Framework\Container;
+namespace Framework\Container;
 
 use Exception;
 use Symfony\Component\Config\ConfigCache;
@@ -12,20 +12,18 @@ use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
 class ContainerFactory
 {
-    public function __construct(private readonly bool $debug)
-    {}
-
     /**
+     * @param bool $debug
      * @return Container
      * @throws Exception
      */
-    public function __invoke(): Container
+    public function __invoke(bool $debug): Container
     {
         $cacheFile = BASE_DIR . '/var/cache/container.php';
-        $configCache = new ConfigCache($cacheFile, $this->debug);
+        $configCache = new ConfigCache($cacheFile, $debug);
 
         if (!$configCache->isFresh()) {
-            $container = $this->createNewContainer();
+            $container = $this->createNewContainer($debug);
             $dumper = new PhpDumper($container);
             $configCache->write($dumper->dump(), $container->getResources());
         }
@@ -36,17 +34,20 @@ class ContainerFactory
     }
 
     /**
+     * @param bool $debug
      * @return ContainerBuilder
      * @throws Exception
      */
-    private function createNewContainer(): ContainerBuilder
+    private function createNewContainer(bool $debug): ContainerBuilder
     {
         $container = new ContainerBuilder();
-        $servicesLocator = new FileLocator(BASE_DIR . '/config');
+        $servicesLocator = new FileLocator(BASE_DIR);
         $servicesLoader = new YamlFileLoader($container, $servicesLocator);
-        $servicesLoader->load('services.yaml');
 
-        $container->setParameter('debug', $this->debug);
+        $servicesLoader->load('framework/config/services.yaml');
+        $servicesLoader->load('config/services.yaml');
+
+        $container->setParameter('debug', $debug);
 
         $container->compile();
 

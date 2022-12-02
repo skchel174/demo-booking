@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Framework\Router;
+namespace Framework\Router;
 
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Routing\Loader\YamlFileLoader;

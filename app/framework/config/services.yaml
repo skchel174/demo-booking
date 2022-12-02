@@ -1,0 +1,14 @@
+services:
+
+  #Kernel
+  Framework\Kernel\HttpKernel:
+    public: true
+    arguments: [ '@service_container' ]
+
+  #Router
+  Framework\Router\RouterFactory: ~
+
+  Symfony\Component\Routing\Router:
+    public: true
+    factory: '@Framework\Router\RouterFactory'
+    arguments: [ '%debug%' ]
