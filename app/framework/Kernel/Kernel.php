@@ -11,6 +11,8 @@ use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Dumper\PhpDumper;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
+use Symfony\Component\EventDispatcher\DependencyInjection\RegisterListenersPass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
@@ -123,13 +125,15 @@ class Kernel implements KernelInterface
      */
     private function buildContainer(): ContainerBuilder
     {
-        $containerBuilder = new ContainerBuilder();
+        $containerBuilder = new ContainerBuilder(new ParameterBag());
         $servicesLocator = new FileLocator('/app');
         $servicesLoader = new YamlFileLoader($containerBuilder, $servicesLocator);
 
         $containerBuilder->getParameterBag()->add($this->getKernelParameters());
         $servicesLoader->load($this->getProjectDir() . '/framework/config/services.yaml');
         $servicesLoader->load($this->getConfigDir() . '/services.yaml');
+
+        $containerBuilder->addCompilerPass(new RegisterListenersPass());
 
         $containerBuilder->compile();
 

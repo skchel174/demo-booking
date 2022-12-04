@@ -3,12 +3,26 @@ services:
   #Kernel
   Framework\Kernel\HttpKernel:
     public: true
-    arguments: [ '@service_container' ]
+    arguments:
+      - '@service_container'
+      - '@event_dispatcher'
 
   #Router
   Framework\Router\RouterFactory: ~
 
   Symfony\Component\Routing\Router:
-    public: true
     factory: '@Framework\Router\RouterFactory'
-    arguments: [ '@service_container' ]
+    arguments:
+      - '@service_container'
+
+  #EventDispatcher
+  Symfony\Component\EventDispatcher\EventDispatcher: ~
+
+  event_dispatcher: '@Symfony\Component\EventDispatcher\EventDispatcher'
+
+  #Events
+  Framework\EventListener\RouterListener:
+    arguments:
+      - '@Symfony\Component\Routing\Router'
+    tags:
+      - { name: 'kernel.event_listener', event: Framework\Event\RequestEvent }
