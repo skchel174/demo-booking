@@ -9,8 +9,6 @@ use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\RequestContext;
-use Symfony\Component\Routing\Router;
 
 class HttpKernel implements KernelInterface
 {
@@ -37,16 +35,9 @@ class HttpKernel implements KernelInterface
             return $this->handleResponse($event->getResponse(), $request);
         }
 
-        /** @var Router $router */
-        $router = $this->container->get(Router::class);
-        $requestContext = new RequestContext();
-        $requestContext->fromRequest($request);
-        $router->setContext($requestContext);
+        $request = $event->getRequest();
 
-        $parameters = $router->match($requestContext->getPathInfo());
-        $request->attributes->add($parameters);
-
-        [$controllerName, $method] = explode('::', $parameters['_controller']);
+        [$controllerName, $method] = explode('::', $request->attributes->get('_controller'));
         $controller = $this->container->get($controllerName);
 
         $response = $controller->$method($request);
