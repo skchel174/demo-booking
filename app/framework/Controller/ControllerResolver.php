@@ -29,7 +29,8 @@ class ControllerResolver
         }
 
         if (is_array($controller)) {
-            [$class, $method] = $controller;
+            $class = $controller[0];
+            $method = $controller[1] ?? null;
 
             if (!$controller = $this->container->get($class)) {
                 throw new \RuntimeException(sprintf('The controller "%s" not exists.', $class));
