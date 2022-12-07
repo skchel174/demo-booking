@@ -23,7 +23,7 @@ class GetControllerTest extends TestCase
     /**
      * @dataProvider parametersProvider
      */
-    public function testSuccess(array $parameters, object|callable $result): void
+    public function testSuccess(array $parameters, ?object $result): void
     {
         $this->container
             ->method('get')
@@ -89,15 +89,14 @@ class GetControllerTest extends TestCase
 
         $request = new Request();
         $request->attributes->add(['_controller' => DummyController::class]);
+
         $this->resolver->getController($request);
     }
 
     private function parametersProvider(): array
     {
-        $callbackController = fn(Request $request) => new Response();
-
         return [
-            'callback controller' => [['_controller' => $callbackController], $callbackController],
+            'callback controller' => [['_controller' => fn(Request $request) => new Response()], null],
             'invokable controller' => [['_controller' => InvokableController::class], new InvokableController()],
             'string controller' => [['_controller' => DummyController::class . '::index'], new DummyController()],
             'array controller' => [['_controller' => [DummyController::class, 'index']], new DummyController()],

@@ -37,24 +37,28 @@ class ControllerResolver
             }
 
             if ($method && !method_exists($controller, $method)) {
-                throw new \RuntimeException(
-                    sprintf('The controller "%s" does not have a method "%s"', $controller::class, $method)
-                );
+                throw new \RuntimeException(sprintf(
+                    'The controller "%s" does not have a method "%s"', $controller::class, $method,
+                ));
+            }
+
+            if (!$method && !is_callable($controller)) {
+                throw new \RuntimeException(sprintf(
+                    'The controller "%s" is not callable', $controller::class,
+                ));
             }
 
             if ($method) {
-                return function (Request $request) use ($controller, $method) {
-                    return $controller->$method($request);
-                };
+                $controller = [$controller, $method];
             }
         }
 
         if (!is_callable($controller)) {
-            throw new \RuntimeException(sprintf('The controller "%s" is not callable', $controller::class));
+            throw new \RuntimeException(sprintf(
+                'Failed to resolve controller for URI "%s"', $request->getPathInfo()
+            ));
         }
 
-        return function ($request) use ($controller) {
-            return $controller($request);
-        };
+        return $controller;
     }
 }
