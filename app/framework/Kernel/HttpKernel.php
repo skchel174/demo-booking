@@ -3,30 +3,22 @@
 namespace Framework\Kernel;
 
 use Exception;
-use Framework\Controller\ArgumentResolver;
-use Framework\Controller\ControllerResolver;
+use Framework\Controller\ArgumentResolverInterface;
+use Framework\Controller\ControllerResolverInterface;
 use Framework\Event\RequestEvent;
 use Framework\Event\ResponseEvent;
-use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Framework\Kernel\Exception\NotFoundHttpException;
 
 class HttpKernel implements KernelInterface
 {
-    private EventDispatcher $dispatcher;
-    private ControllerResolver $controllerResolver;
-    private ArgumentResolver $argumentResolver;
-
     public function __construct(
-        EventDispatcher $dispatcher,
-        ControllerResolver $controllerResolver,
-        ArgumentResolver $argumentResolver,
-    ) {
-        $this->dispatcher = $dispatcher;
-        $this->controllerResolver = $controllerResolver;
-        $this->argumentResolver = $argumentResolver;
-    }
+        private readonly EventDispatcherInterface $dispatcher,
+        private readonly ControllerResolverInterface $controllerResolver,
+        private readonly ArgumentResolverInterface $argumentResolver,
+    ) {}
 
     /**
      * @param Request $request
