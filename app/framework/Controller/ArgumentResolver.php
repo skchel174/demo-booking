@@ -4,13 +4,10 @@ namespace Framework\Controller;
 
 use Symfony\Component\HttpFoundation\Request;
 
-class ArgumentResolver
+class ArgumentResolver implements ArgumentResolverInterface
 {
     /**
-     * @param Request $request
-     * @param callable $controller
-     * @return array
-     * @throws \ReflectionException
+     * {@inheritdoc}
      */
     public function getArguments(Request $request, callable $controller): array
     {
