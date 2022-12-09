@@ -5,7 +5,7 @@ namespace Framework\Controller;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
-class ControllerResolver
+class ControllerResolver implements ControllerResolverInterface
 {
     private ContainerInterface $container;
 
@@ -15,8 +15,7 @@ class ControllerResolver
     }
 
     /**
-     * @param Request $request
-     * @return callable|false
+     * {@inheritdoc}
      */
     public function getController(Request $request): callable|false
     {
