@@ -1,10 +1,14 @@
 <?php
 
+namespace Tests\Framework\Controller\ControllerResolver;
+
 use Framework\Controller\ControllerResolver;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Tests\Framework\Controller\DummyController\ArrayController;
+use Tests\Framework\Controller\DummyController\InvokableController;
 
 class GetControllerTest extends TestCase
 {
@@ -29,8 +33,7 @@ class GetControllerTest extends TestCase
             ->method('get')
             ->willReturn($result);
 
-        $request = new Request();
-        $request->attributes->add($parameters);
+        $request = new Request(attributes: $parameters);
         $controller = $this->resolver->getController($request);
 
         $this->assertIsCallable($controller);
@@ -46,7 +49,7 @@ class GetControllerTest extends TestCase
 
     public function testNotExistsClass(): void
     {
-        $this->expectException(RuntimeException::class);
+        $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage(
             sprintf('The controller "%s" not exists.', $controller = 'InvalidController')
         );
@@ -55,41 +58,37 @@ class GetControllerTest extends TestCase
             ->method('get')
             ->willReturn(null);
 
-        $request = new Request();
-        $request->attributes->add(['_controller' => $controller]);
+        $request = new Request(attributes: ['_controller' => $controller]);
         $this->resolver->getController($request);
     }
 
     public function testNotExistsMethod(): void
     {
-        $this->expectException(RuntimeException::class);
+        $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage(
-            sprintf('The controller "%s" does not have a method "%s"', DummyController::class, 'method')
+            sprintf('The controller "%s" does not have a method "%s"', ArrayController::class, 'method')
         );
 
         $this->container
             ->method('get')
-            ->willReturn(new DummyController());
+            ->willReturn(new ArrayController());
 
-        $request = new Request();
-        $request->attributes->add(['_controller' => [DummyController::class, 'method']]);
+        $request = new Request(attributes: ['_controller' => [ArrayController::class, 'method']]);
         $this->resolver->getController($request);
     }
 
     public function testResolveNotInvokable(): void
     {
-        $this->expectException(RuntimeException::class);
+        $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage(
-            sprintf('The controller "%s" is not callable', DummyController::class)
+            sprintf('The controller "%s" is not callable', ArrayController::class)
         );
 
         $this->container
             ->method('get')
-            ->willReturn(new DummyController());
+            ->willReturn(new ArrayController());
 
-        $request = new Request();
-        $request->attributes->add(['_controller' => DummyController::class]);
-
+        $request = new Request(attributes: ['_controller' => ArrayController::class]);
         $this->resolver->getController($request);
     }
 
@@ -98,24 +97,8 @@ class GetControllerTest extends TestCase
         return [
             'callback controller' => [['_controller' => fn(Request $request) => new Response()], null],
             'invokable controller' => [['_controller' => InvokableController::class], new InvokableController()],
-            'string controller' => [['_controller' => DummyController::class . '::index'], new DummyController()],
-            'array controller' => [['_controller' => [DummyController::class, 'index']], new DummyController()],
+            'string controller' => [['_controller' => ArrayController::class . '::index'], new ArrayController()],
+            'array controller' => [['_controller' => [ArrayController::class, 'index']], new ArrayController()],
         ];
-    }
-}
-
-class DummyController
-{
-    public function index(Request $request): Response
-    {
-        return new Response();
-    }
-}
-
-class InvokableController
-{
-    public function __invoke(Request $request): Response
-    {
-        return new Response();
     }
 }
