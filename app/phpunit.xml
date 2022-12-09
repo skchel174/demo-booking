@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <phpunit
-    bootstrap="./vendor/autoload.php"
+    bootstrap="vendor/autoload.php"
     colors="true"
     convertErrorsToExceptions="true"
     convertNoticesToExceptions="true"
@@ -9,11 +9,11 @@
     stopOnFailure="false"
 >
     <testsuites>
-        <testsuite name="framework">
+        <testsuite name="Framework">
             <directory suffix="Test.php">./tests/framework</directory>
         </testsuite>
 
-        <testsuite name="app">
+        <testsuite name="App">
             <directory suffix="Test.php">./tests/app</directory>
         </testsuite>
     </testsuites>
