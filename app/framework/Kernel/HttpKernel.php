@@ -3,6 +3,7 @@
 namespace Framework\Kernel;
 
 use Exception;
+use Framework\Controller\ArgumentResolver;
 use Framework\Controller\ControllerResolver;
 use Framework\Event\RequestEvent;
 use Framework\Event\ResponseEvent;
@@ -14,12 +15,17 @@ use Framework\Kernel\Exception\NotFoundHttpException;
 class HttpKernel implements KernelInterface
 {
     private EventDispatcher $dispatcher;
-    private ControllerResolver $resolver;
+    private ControllerResolver $controllerResolver;
+    private ArgumentResolver $argumentResolver;
 
-    public function __construct(EventDispatcher $dispatcher, ControllerResolver $resolver)
-    {
+    public function __construct(
+        EventDispatcher $dispatcher,
+        ControllerResolver $controllerResolver,
+        ArgumentResolver $argumentResolver,
+    ) {
         $this->dispatcher = $dispatcher;
-        $this->resolver = $resolver;
+        $this->controllerResolver = $controllerResolver;
+        $this->argumentResolver = $argumentResolver;
     }
 
     /**
@@ -38,14 +44,16 @@ class HttpKernel implements KernelInterface
 
         $request = $event->getRequest();
 
-        if (!$controller = $this->resolver->getController($request)) {
+        if (!$controller = $this->controllerResolver->getController($request)) {
             throw new NotFoundHttpException(sprintf(
                 'Not found controller for path "%s". The route is wrongly configured.',
                 $request->getPathInfo()
             ));
         }
 
-        $response = $controller($request);
+        $arguments = $this->argumentResolver->getArguments($request, $controller);
+
+        $response = $controller(...$arguments);
 
         return $this->handleResponse($response, $request);
     }

@@ -6,6 +6,7 @@ services:
     arguments:
       - '@Symfony\Component\EventDispatcher\EventDispatcher'
       - '@Framework\Controller\ControllerResolver'
+      - '@Framework\Controller\ArgumentResolver'
 
   #Router
   Framework\Router\RouterFactory: ~
@@ -15,10 +16,12 @@ services:
     arguments:
       - '@service_container'
 
-  #ControllerResolver
+  #Controller
   Framework\Controller\ControllerResolver:
     arguments:
       - '@service_container'
+
+  Framework\Controller\ArgumentResolver: ~
 
   #EventDispatcher
   Symfony\Component\EventDispatcher\EventDispatcher: ~
