@@ -34,3 +34,9 @@ services:
       - '@Symfony\Component\Routing\Router'
     tags:
       - { name: 'kernel.event_listener', event: Framework\Event\RequestEvent }
+
+  Framework\EventListener\ExceptionListener:
+    arguments:
+      - 'kernel.debug'
+    tags:
+      - { name: 'kernel.event_listener', event: Framework\Event\ExceptionEvent }
