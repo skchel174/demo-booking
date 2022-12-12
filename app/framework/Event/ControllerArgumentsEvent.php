@@ -3,17 +3,34 @@
 namespace Framework\Event;
 
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Contracts\EventDispatcher\Event;
 
-class ControllerEvent extends Event
+class ControllerArgumentsEvent
 {
+    private array $arguments;
     private object|array|string $controller;
     private Request $request;
 
-    public function __construct(object|array|string $controller, Request $request)
+    public function __construct(array $arguments, object|array|string $controller, Request $request)
     {
+        $this->arguments = $arguments;
         $this->controller = $controller;
         $this->request = $request;
+    }
+
+    /**
+     * @return array
+     */
+    public function getArguments(): array
+    {
+        return $this->arguments;
+    }
+
+    /**
+     * @param array $arguments
+     */
+    public function setArguments(array $arguments): void
+    {
+        $this->arguments = $arguments;
     }
 
     /**
@@ -25,7 +42,7 @@ class ControllerEvent extends Event
     }
 
     /**
-     * @param object|array|string $controller
+     * @param array|object|string $controller
      */
     public function setController(object|array|string $controller): void
     {

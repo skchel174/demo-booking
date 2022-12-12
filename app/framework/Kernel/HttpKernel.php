@@ -5,6 +5,7 @@ namespace Framework\Kernel;
 use Exception;
 use Framework\Controller\ArgumentResolverInterface;
 use Framework\Controller\ControllerResolverInterface;
+use Framework\Event\ControllerArgumentsEvent;
 use Framework\Event\ControllerEvent;
 use Framework\Event\RequestEvent;
 use Framework\Event\ResponseEvent;
@@ -49,6 +50,11 @@ class HttpKernel implements KernelInterface
         $controller = $event->getController();
 
         $arguments = $this->argumentResolver->getArguments($request, $controller);
+
+        $event = new ControllerArgumentsEvent($arguments, $controller, $request);
+        $this->dispatcher->dispatch($event);
+        $controller = $event->getController();
+        $arguments = $event->getArguments();
 
         $response = $controller(...$arguments);
 
