@@ -2,11 +2,11 @@
 
 namespace Framework\Kernel;
 
-use Exception;
 use Framework\Controller\ArgumentResolverInterface;
 use Framework\Controller\ControllerResolverInterface;
 use Framework\Event\ControllerArgumentsEvent;
 use Framework\Event\ControllerEvent;
+use Framework\Event\ExceptionEvent;
 use Framework\Event\RequestEvent;
 use Framework\Event\ResponseEvent;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -25,9 +25,22 @@ class HttpKernel implements KernelInterface
     /**
      * @param Request $request
      * @return Response
-     * @throws Exception
+     * @throws \Throwable
      */
     public function handle(Request $request): Response
+    {
+        try {
+            return $this->handleRequest($request);
+        } catch (\Throwable $e) {
+            return $this->handleThrowable($e, $request);
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @return Response
+     */
+    public function handleRequest(Request $request): Response
     {
         $event = new RequestEvent($request);
         $this->dispatcher->dispatch($event);
@@ -57,6 +70,26 @@ class HttpKernel implements KernelInterface
         $arguments = $event->getArguments();
 
         $response = $controller(...$arguments);
+
+        return $this->handleResponse($response, $request);
+    }
+
+    /**
+     * @param \Throwable $e
+     * @param Request $request
+     * @return Response
+     * @throws \Throwable
+     */
+    private function handleThrowable(\Throwable $e, Request $request): Response
+    {
+        $event = new ExceptionEvent($request, $e);
+        $this->dispatcher->dispatch($event);
+
+        if (!$event->hasResponse()) {
+            throw $e;
+        }
+
+        $response = $event->getResponse();
 
         return $this->handleResponse($response, $request);
     }
