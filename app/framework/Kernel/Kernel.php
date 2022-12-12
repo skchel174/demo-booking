@@ -3,12 +3,11 @@
 namespace Framework\Kernel;
 
 use Exception;
-use ProjectServiceContainer;
 use ReflectionException;
 use Symfony\Component\Config\ConfigCache;
 use Symfony\Component\Config\FileLocator;
-use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Dumper\PhpDumper;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
@@ -21,7 +20,7 @@ class Kernel implements KernelInterface
 {
     private bool $debug;
     private string $projectDir;
-    private Container $container;
+    private ContainerInterface $container;
 
     public function __construct(bool $debug)
     {
@@ -31,22 +30,18 @@ class Kernel implements KernelInterface
     /**
      * @param Request $request
      * @return Response
+     * @throws Throwable
      */
     public function handle(Request $request): Response
     {
-        try {
-            if (empty($this->container)) {
-                $this->container = $this->initializeContainer();
-            }
-            /** @var HttpKernel $kernel */
-            $kernel = $this->container->get(HttpKernel::class);
-            return $kernel->handle($request);
-        } catch (Throwable $e) {
-            if ($this->debug) {
-                dd($e);
-            }
-            return new Response('', Response::HTTP_INTERNAL_SERVER_ERROR);
+        if (empty($this->container)) {
+            $this->initializeContainer();
         }
+
+        /** @var HttpKernel $kernel */
+        $kernel = $this->container->get(HttpKernel::class);
+
+        return $kernel->handle($request);
     }
 
     /**
@@ -100,10 +95,17 @@ class Kernel implements KernelInterface
     }
 
     /**
-     * @return ProjectServiceContainer
-     * @throws Exception
+     * @return string
      */
-    private function initializeContainer(): ProjectServiceContainer
+    protected function getContainerClass(): string
+    {
+        return 'ProjectServiceContainer';
+    }
+
+    /**
+     * @throws ReflectionException
+     */
+    private function initializeContainer(): void
     {
         $cacheFile = $this->getCacheDir() . '/container.php';
         $configCache = new ConfigCache($cacheFile, $this->debug);
@@ -111,12 +113,14 @@ class Kernel implements KernelInterface
         if (!$configCache->isFresh()) {
             $container = $this->buildContainer();
             $dumper = new PhpDumper($container);
-            $configCache->write($dumper->dump(), $container->getResources());
+            $dump = $dumper->dump(['class' => $this->getContainerClass()]);
+            $configCache->write($dump, $container->getResources());
         }
 
         require_once $cacheFile;
 
-        return new ProjectServiceContainer();
+        $containerClass = $this->getContainerClass();
+        $this->container = new $containerClass();
     }
 
     /**
