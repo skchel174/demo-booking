@@ -5,6 +5,7 @@ namespace Framework\Kernel;
 use Exception;
 use Framework\Controller\ArgumentResolverInterface;
 use Framework\Controller\ControllerResolverInterface;
+use Framework\Event\ControllerEvent;
 use Framework\Event\RequestEvent;
 use Framework\Event\ResponseEvent;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -42,6 +43,10 @@ class HttpKernel implements KernelInterface
                 $request->getPathInfo()
             ));
         }
+
+        $event = new ControllerEvent($controller, $request);
+        $this->dispatcher->dispatch($event);
+        $controller = $event->getController();
 
         $arguments = $this->argumentResolver->getArguments($request, $controller);
 
