@@ -3,23 +3,24 @@
 namespace Framework\Kernel;
 
 use Exception;
+use Framework\Controller\ArgumentResolverInterface;
+use Framework\Controller\ControllerResolverInterface;
+use Framework\Event\ControllerArgumentsEvent;
+use Framework\Event\ControllerEvent;
 use Framework\Event\RequestEvent;
 use Framework\Event\ResponseEvent;
-use Symfony\Component\DependencyInjection\Container;
-use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Framework\Kernel\Exception\NotFoundHttpException;
 
 class HttpKernel implements KernelInterface
 {
-    private Container $container;
-    private EventDispatcher $dispatcher;
-
-    public function __construct(Container $container, EventDispatcher $dispatcher)
-    {
-        $this->container = $container;
-        $this->dispatcher = $dispatcher;
-    }
+    public function __construct(
+        private readonly EventDispatcherInterface $dispatcher,
+        private readonly ControllerResolverInterface $controllerResolver,
+        private readonly ArgumentResolverInterface $argumentResolver,
+    ) {}
 
     /**
      * @param Request $request
@@ -37,10 +38,25 @@ class HttpKernel implements KernelInterface
 
         $request = $event->getRequest();
 
-        [$controllerName, $method] = explode('::', $request->attributes->get('_controller'));
-        $controller = $this->container->get($controllerName);
+        if (!$controller = $this->controllerResolver->getController($request)) {
+            throw new NotFoundHttpException(sprintf(
+                'Not found controller for path "%s". The route is wrongly configured.',
+                $request->getPathInfo()
+            ));
+        }
 
-        $response = $controller->$method($request);
+        $event = new ControllerEvent($controller, $request);
+        $this->dispatcher->dispatch($event);
+        $controller = $event->getController();
+
+        $arguments = $this->argumentResolver->getArguments($request, $controller);
+
+        $event = new ControllerArgumentsEvent($arguments, $controller, $request);
+        $this->dispatcher->dispatch($event);
+        $controller = $event->getController();
+        $arguments = $event->getArguments();
+
+        $response = $controller(...$arguments);
 
         return $this->handleResponse($response, $request);
     }

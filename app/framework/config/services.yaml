@@ -4,8 +4,9 @@ services:
   Framework\Kernel\HttpKernel:
     public: true
     arguments:
-      - '@service_container'
-      - '@event_dispatcher'
+      - '@Symfony\Component\EventDispatcher\EventDispatcher'
+      - '@Framework\Controller\ControllerResolver'
+      - '@Framework\Controller\ArgumentResolver'
 
   #Router
   Framework\Router\RouterFactory: ~
@@ -14,6 +15,13 @@ services:
     factory: '@Framework\Router\RouterFactory'
     arguments:
       - '@service_container'
+
+  #Controller
+  Framework\Controller\ControllerResolver:
+    arguments:
+      - '@service_container'
+
+  Framework\Controller\ArgumentResolver: ~
 
   #EventDispatcher
   Symfony\Component\EventDispatcher\EventDispatcher: ~

@@ -1,6 +1,6 @@
 home:
   path: '/'
-  controller: App\Controller\DemoController::index
+  controller: [App\Controller\DemoController, index]
   methods: GET
 
 greeting:

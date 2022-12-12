@@ -16,3 +16,6 @@ app-composer-install:
 
 app-cli:
 	docker-compose exec app-cli bash
+
+app-test:
+	docker-compose exec app-cli php vendor/bin/phpunit
