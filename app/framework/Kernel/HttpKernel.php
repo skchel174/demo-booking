@@ -64,7 +64,7 @@ class HttpKernel implements KernelInterface
 
         $arguments = $this->argumentResolver->getArguments($request, $controller);
 
-        $event = new ControllerArgumentsEvent($arguments, $controller, $request);
+        $event = new ControllerArgumentsEvent($controller, $arguments, $request);
         $this->dispatcher->dispatch($event);
         $controller = $event->getController();
         $arguments = $event->getArguments();
@@ -82,7 +82,7 @@ class HttpKernel implements KernelInterface
      */
     private function handleThrowable(\Throwable $e, Request $request): Response
     {
-        $event = new ExceptionEvent($request, $e);
+        $event = new ExceptionEvent($e, $request);
         $this->dispatcher->dispatch($event);
 
         if (!$event->hasResponse()) {

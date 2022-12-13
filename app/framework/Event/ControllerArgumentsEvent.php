@@ -4,33 +4,20 @@ namespace Framework\Event;
 
 use Symfony\Component\HttpFoundation\Request;
 
-class ControllerArgumentsEvent
+class ControllerArgumentsEvent extends KernelEvent
 {
-    private array $arguments;
     private object|array|string $controller;
-    private Request $request;
+    private array $arguments;
 
-    public function __construct(array $arguments, object|array|string $controller, Request $request)
-    {
+    public function __construct(
+        object|array|string $controller,
+        array $arguments,
+        Request $request,
+    ) {
+        parent::__construct($request);
+
         $this->arguments = $arguments;
         $this->controller = $controller;
-        $this->request = $request;
-    }
-
-    /**
-     * @return array
-     */
-    public function getArguments(): array
-    {
-        return $this->arguments;
-    }
-
-    /**
-     * @param array $arguments
-     */
-    public function setArguments(array $arguments): void
-    {
-        $this->arguments = $arguments;
     }
 
     /**
@@ -50,18 +37,18 @@ class ControllerArgumentsEvent
     }
 
     /**
-     * @return Request
+     * @return array
      */
-    public function getRequest(): Request
+    public function getArguments(): array
     {
-        return $this->request;
+        return $this->arguments;
     }
 
     /**
-     * @param Request $request
+     * @param array $arguments
      */
-    public function setRequest(Request $request): void
+    public function setArguments(array $arguments): void
     {
-        $this->request = $request;
+        $this->arguments = $arguments;
     }
 }

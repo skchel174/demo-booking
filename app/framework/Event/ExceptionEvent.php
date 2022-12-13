@@ -7,11 +7,11 @@ use Symfony\Component\HttpFoundation\Request;
 class ExceptionEvent extends RequestEvent
 {
     private \Throwable $throwable;
-    private Request $request;
 
-    public function __construct(Request $request, \Throwable $throwable)
+    public function __construct(\Throwable $throwable, Request $request)
     {
         parent::__construct($request);
+
         $this->throwable = $throwable;
     }
 
