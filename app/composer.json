@@ -21,6 +21,8 @@
         "symfony/yaml": "^6.1",
         "symfony/config": "^6.1",
         "symfony/dependency-injection": "^6.1",
-        "symfony/event-dispatcher": "^6.2"
+        "symfony/event-dispatcher": "^6.2",
+        "symfony/error-handler": "^6.2",
+        "symfony/serializer-pack": "^1.1"
     }
 }
