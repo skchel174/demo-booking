@@ -2,26 +2,27 @@
 
 namespace Framework\EventListener;
 
+use Framework\ExceptionHandler\ExceptionHandlerInterface;
 use Framework\Event\ExceptionEvent;
-use Symfony\Component\HttpFoundation\Response;
 
 class ExceptionListener
 {
-    private bool $debug;
+    private ExceptionHandlerInterface $handler;
 
-    public function __construct(bool $debug)
+    public function __construct(ExceptionHandlerInterface $handler)
     {
-        $this->debug = $debug;
+        $this->handler = $handler;
     }
 
+    /**
+     * @param ExceptionEvent $event
+     * @return void
+     */
     public function __invoke(ExceptionEvent $event): void
     {
-        $exception = $event->getThrowable();
-
-        if ($this->debug) {
-            dd($exception);
-        }
-
-        $event->setResponse(new Response('', Response::HTTP_INTERNAL_SERVER_ERROR));
+        $throwable = $event->getThrowable();
+        $request = $event->getRequest();
+        $response = $this->handler->handleException($throwable, $request);
+        $event->setResponse($response);
     }
 }
