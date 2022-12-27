@@ -9,9 +9,9 @@ use Throwable;
 interface ExceptionHandlerInterface
 {
     /**
-     * @param Throwable $exception
+     * @param Throwable $e
      * @param Request $request
      * @return Response
      */
-    public function handleException(Throwable $exception, Request $request): Response;
+    public function handleException(Throwable $e, Request $request): Response;
 }
