@@ -32,7 +32,8 @@ class ExceptionNormalizer implements NormalizerInterface
         if ($this->debug) {
             $exception = $object->getPrevious() ?: $object;
             $data['class'] = $exception->getClass();
-            $data['details'] = $exception->getTrace();
+            $data['line'] = $exception->getLine();
+            $data['trace'] = $exception->getTrace();
         }
 
         return $data;

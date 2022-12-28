@@ -24,7 +24,7 @@ class ExceptionHandler implements ExceptionHandlerInterface
      * @param Request $request
      * @return Response
      */
-    public function handleException(Throwable $e, Request $request): Response
+    public function handle(Throwable $e, Request $request): Response
     {
         $e = $this->configureException($e);
 
@@ -80,6 +80,7 @@ class ExceptionHandler implements ExceptionHandlerInterface
                 $config['status_code'] = $e->getStatusCode();
             }
         }
+
         $statusCode = $config['status_code'] ?? 500;
         $isLoggable = $config['loggable'] ?? true;
         $logLevel = $config['log_level'] ?? 'error';

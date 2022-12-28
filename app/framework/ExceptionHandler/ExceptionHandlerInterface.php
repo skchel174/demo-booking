@@ -13,5 +13,5 @@ interface ExceptionHandlerInterface
      * @param Request $request
      * @return Response
      */
-    public function handleException(Throwable $e, Request $request): Response;
+    public function handle(Throwable $e, Request $request): Response;
 }
