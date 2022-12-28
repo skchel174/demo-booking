@@ -1,7 +1,10 @@
+parameters:
+  exceptions: []
+
 services:
 
   #Kernel
-  Framework\Kernel\HttpKernel:
+  Kernel\HttpKernel:
     public: true
     arguments:
       - '@Symfony\Component\EventDispatcher\EventDispatcher'
@@ -29,9 +32,10 @@ services:
   Framework\ExceptionHandler\ExceptionHandler:
     arguments:
       - '@Symfony\Component\ErrorHandler\ErrorRenderer\HtmlErrorRenderer'
-      - '%kernel.debug%'
+      - '@Psr\Log\LoggerInterface'
+      - '%exceptions%'
     calls:
-      - addRenderer: ['application/json', '@Symfony\Component\ErrorHandler\ErrorRenderer\SerializerErrorRenderer']
+      - addRenderer: [ 'json', '@Symfony\Component\ErrorHandler\ErrorRenderer\SerializerErrorRenderer' ]
 
   #ExceptionRenderers
   Symfony\Component\ErrorHandler\ErrorRenderer\HtmlErrorRenderer:
@@ -48,16 +52,17 @@ services:
   #Serializer
   Symfony\Component\Serializer\SerializerInterface: '@Symfony\Component\Serializer\Serializer'
 
-  Symfony\Component\Serializer\Serializer:
+  error_serializer:
+    class: Symfony\Component\Serializer\Serializer
     arguments:
-      - [
-        '@Symfony\Component\Serializer\Normalizer\JsonSerializableNormalizer',
-        '@Symfony\Component\Serializer\Normalizer\ObjectNormalizer'
-      ]
+      - [ '@Framework\ExceptionHandler\ExceptionNormalizer' ],
       - [ '@Symfony\Component\Serializer\Encoder\JsonEncoder' ]
 
-  Symfony\Component\Serializer\Normalizer\JsonSerializableNormalizer: ~
-  Symfony\Component\Serializer\Normalizer\ObjectNormalizer: ~
+  Symfony\Component\Serializer\Serializer: '@error_serializer'
+
+  Framework\ExceptionHandler\ExceptionNormalizer:
+    arguments:
+      - '%kernel.debug%'
 
   Symfony\Component\Serializer\Encoder\JsonEncoder: ~
 

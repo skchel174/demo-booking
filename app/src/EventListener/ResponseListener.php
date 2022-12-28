@@ -2,7 +2,7 @@
 
 namespace App\EventListener;
 
-use Framework\Event\ResponseEvent;
+use framework\Event\ResponseEvent;
 
 class ResponseListener
 {

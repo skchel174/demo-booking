@@ -3,7 +3,8 @@
     "autoload": {
         "psr-4": {
             "App\\": "src/",
-            "Framework\\": "framework/"
+            "Framework\\": "framework/",
+            "Framework\\Tests\\": "framework/tests"
         }
     },
     "autoload-dev": {
@@ -23,6 +24,7 @@
         "symfony/dependency-injection": "^6.1",
         "symfony/event-dispatcher": "^6.2",
         "symfony/error-handler": "^6.2",
-        "symfony/serializer-pack": "^1.1"
+        "symfony/serializer-pack": "^1.1",
+        "symfony/monolog-bundle": "^3.8"
     }
 }

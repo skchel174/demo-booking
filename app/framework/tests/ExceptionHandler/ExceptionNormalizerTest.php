@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Framework\ExceptionHandler;
+namespace Framework\Tests\ExceptionHandler;
 
 use Framework\ExceptionHandler\ExceptionNormalizer;
 use PHPUnit\Framework\MockObject\MockObject;

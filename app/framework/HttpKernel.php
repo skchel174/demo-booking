@@ -1,18 +1,18 @@
 <?php
 
-namespace Framework\Kernel;
+namespace Kernel;
 
-use Framework\Controller\ArgumentResolverInterface;
-use Framework\Controller\ControllerResolverInterface;
-use Framework\Event\ControllerArgumentsEvent;
-use Framework\Event\ControllerEvent;
-use Framework\Event\ExceptionEvent;
-use Framework\Event\RequestEvent;
-use Framework\Event\ResponseEvent;
+use Framework\bundle\src\Controller\ArgumentResolverInterface;
+use Framework\bundle\src\Controller\ControllerResolverInterface;
+use Framework\bundle\src\Event\ControllerArgumentsEvent;
+use Framework\bundle\src\Event\ControllerEvent;
+use Kernel\Event\ExceptionEvent;
+use Kernel\Event\RequestEvent;
+use Kernel\Event\ResponseEvent;
+use Kernel\Exception\NotFoundHttpException;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Framework\Kernel\Exception\NotFoundHttpException;
 
 class HttpKernel implements KernelInterface
 {

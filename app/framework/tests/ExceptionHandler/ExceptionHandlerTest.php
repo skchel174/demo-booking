@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Framework\ExceptionHandler;
+namespace Framework\Tests\ExceptionHandler;
 
 use Framework\ExceptionHandler\ExceptionHandler;
 use Framework\ExceptionHandler\HttpException;

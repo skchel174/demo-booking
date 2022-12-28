@@ -1,6 +1,6 @@
 <?php
 
-namespace Framework\Kernel;
+namespace Kernel;
 
 use Exception;
 use ReflectionException;
@@ -14,17 +14,18 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 use Symfony\Component\EventDispatcher\DependencyInjection\RegisterListenersPass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Bundle\BundleInterface;
+use Symfony\Component\HttpKernel\DependencyInjection\MergeExtensionConfigurationPass;
 use Throwable;
 
 class Kernel implements KernelInterface
 {
-    private bool $debug;
     private string $projectDir;
     private ContainerInterface $container;
+    private array $bundles = [];
 
-    public function __construct(bool $debug)
+    public function __construct(private readonly bool $debug)
     {
-        $this->debug = $debug;
     }
 
     /**
@@ -35,8 +36,14 @@ class Kernel implements KernelInterface
     public function handle(Request $request): Response
     {
         if (empty($this->container)) {
+            $this->initializeBundles();
             $this->initializeContainer();
         }
+
+//        foreach ($this->bundles as $bundle) {
+//            $bundle->setContainer($this->container);
+//            $bundle->boot();
+//        }
 
         /** @var HttpKernel $kernel */
         $kernel = $this->container->get(HttpKernel::class);
@@ -78,6 +85,24 @@ class Kernel implements KernelInterface
     protected function getConfigDir(): string
     {
         return $this->getProjectDir() . '/config';
+    }
+
+    /**
+     * @return string
+     * @throws ReflectionException
+     */
+    protected function getServicesPath(): string
+    {
+        return $this->getConfigDir() . '/services.yaml';
+    }
+
+    /**
+     * @return string
+     * @throws ReflectionException
+     */
+    protected function getBundlesPath(): string
+    {
+        return $this->getConfigDir() . '/bundles.php';
     }
 
     /**
@@ -129,18 +154,62 @@ class Kernel implements KernelInterface
      */
     private function buildContainer(): ContainerBuilder
     {
-        $containerBuilder = new ContainerBuilder(new ParameterBag());
+        $container = new ContainerBuilder(new ParameterBag());
         $servicesLocator = new FileLocator('/app');
-        $servicesLoader = new YamlFileLoader($containerBuilder, $servicesLocator);
+        $servicesLoader = new YamlFileLoader($container, $servicesLocator);
 
-        $containerBuilder->getParameterBag()->add($this->getKernelParameters());
-        $servicesLoader->load($this->getProjectDir() . '/framework/config/services.yaml');
-        $servicesLoader->load($this->getConfigDir() . '/services.yaml');
+        $container->getParameterBag()->add($this->getKernelParameters());
 
-        $containerBuilder->addCompilerPass(new RegisterListenersPass());
+        $servicesLoader->load($this->getProjectDir() . '/framework/bundle/config/services.yaml');
 
-        $containerBuilder->compile();
+        $extensions = [];
+        /** @var BundleInterface $bundle */
+        foreach ($this->bundles as $bundle) {
+            if ($extension = $bundle->getContainerExtension()) {
+                $container->registerExtension($extension);
+            }
 
-        return $containerBuilder;
+            if ($this->debug) {
+                $container->addObjectResource($bundle);
+            }
+        }
+
+        foreach ($this->bundles as $bundle) {
+            $bundle->build($container);
+        }
+
+        foreach ($container->getExtensions() as $extension) {
+            $extensions[] = $extension->getAlias();
+        }
+
+        $container->getCompilerPassConfig()->setMergePass(new MergeExtensionConfigurationPass($extensions));
+
+        $servicesLoader->load($this->getServicesPath());
+
+        $container->addCompilerPass(new RegisterListenersPass());
+        $container->compile();
+
+        return $container;
+    }
+
+    /**
+     * @return void
+     * @throws ReflectionException
+     */
+    private function initializeBundles(): void
+    {
+        $bundlesList = require $this->getBundlesPath();
+
+        $this->bundles = [];
+        foreach ($bundlesList as $bundleClass) {
+            /** @var BundleInterface $bundle */
+            $bundle = new $bundleClass();
+            if (isset($this->bundles[$bundle->getName()])) {
+                throw new \LogicException(
+                    sprintf('Bundle with name %s is already registered.', $bundle->getName())
+                );
+            }
+            $this->bundles[$bundle->getName()] = $bundle;
+        }
     }
 }

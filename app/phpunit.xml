@@ -10,11 +10,11 @@
 >
     <testsuites>
         <testsuite name="Framework">
-            <directory suffix="Test.php">./tests/framework</directory>
+            <directory suffix="Test.php">framework/tests</directory>
         </testsuite>
 
         <testsuite name="App">
-            <directory suffix="Test.php">./tests/app</directory>
+            <directory suffix="Test.php">tests</directory>
         </testsuite>
     </testsuites>
 </phpunit>

@@ -1,6 +1,6 @@
 <?php
 
-namespace Framework\Kernel\Exception;
+namespace Framework\Exception;
 
 class NotFoundHttpException extends \RuntimeException
 {
