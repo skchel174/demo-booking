@@ -7,12 +7,7 @@ use Framework\Event\ExceptionEvent;
 
 class ExceptionListener
 {
-    private ExceptionHandlerInterface $handler;
-
-    public function __construct(ExceptionHandlerInterface $handler)
-    {
-        $this->handler = $handler;
-    }
+    public function __construct(private readonly ExceptionHandlerInterface $handler) {}
 
     /**
      * @param ExceptionEvent $event
@@ -22,7 +17,7 @@ class ExceptionListener
     {
         $throwable = $event->getThrowable();
         $request = $event->getRequest();
-        $response = $this->handler->handleException($throwable, $request);
+        $response = $this->handler->handle($throwable, $request);
         $event->setResponse($response);
     }
 }
