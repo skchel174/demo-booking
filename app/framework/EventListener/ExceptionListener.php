@@ -4,10 +4,11 @@ namespace Framework\EventListener;
 
 use Framework\ExceptionHandler\ExceptionHandlerInterface;
 use Framework\Event\ExceptionEvent;
+use Framework\ThrowableHandler\ThrowableHandlerInterface;
 
 class ExceptionListener
 {
-    public function __construct(private readonly ExceptionHandlerInterface $handler) {}
+    public function __construct(private readonly ThrowableHandlerInterface $handler) {}
 
     /**
      * @param ExceptionEvent $event

@@ -1,9 +1,9 @@
 <?php
 
-namespace Framework\Tests\ExceptionHandler;
+namespace Framework\Tests\ThrowableHandler;
 
-use Framework\ExceptionHandler\ExceptionHandler;
-use Framework\ExceptionHandler\HttpException;
+use Framework\ThrowableHandler\ExtendedHttpException;
+use Framework\ThrowableHandler\ThrowableHandler;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException as SymfonyHttpException;
 
-class ExceptionHandlerTest extends TestCase
+class ThrowableHandlerTest extends TestCase
 {
     public function testHandleExceptionWithoutConfig(): void
     {
@@ -21,7 +21,7 @@ class ExceptionHandlerTest extends TestCase
 
         $logger = $this->createLoggerMock('error', $message);
         $renderer = $this->createRendererMock($exception, $statusCode = 500);
-        $handler = new ExceptionHandler($renderer, $logger, []);
+        $handler = new ThrowableHandler($renderer, $logger, []);
 
         $response = $handler->handle($exception, $this->createMock(Request::class));
 
@@ -44,7 +44,7 @@ class ExceptionHandlerTest extends TestCase
 
         $logger = $this->createLoggerMock($logLevel, $message);
         $renderer = $this->createRendererMock($exception, $statusCode);
-        $handler = new ExceptionHandler($renderer, $logger, $exceptionMapping);
+        $handler = new ThrowableHandler($renderer, $logger, $exceptionMapping);
 
         $response = $handler->handle($exception, $this->createMock(Request::class));
 
@@ -65,7 +65,7 @@ class ExceptionHandlerTest extends TestCase
         $renderer = $this->createRendererMock($exception, $statusCode);
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->never())->method('log');
-        $handler = new ExceptionHandler($renderer, $logger, $exceptionMapping);
+        $handler = new ThrowableHandler($renderer, $logger, $exceptionMapping);
 
         $handler->handle($exception, $this->createMock(Request::class));
     }
@@ -78,7 +78,7 @@ class ExceptionHandlerTest extends TestCase
 
         $logger = $this->createLoggerMock('error', $message);
         $renderer = $this->createRendererMock($exception, $statusCode, $headers);
-        $handler = new ExceptionHandler($renderer, $logger, []);
+        $handler = new ThrowableHandler($renderer, $logger, []);
 
         $response = $handler->handle($exception, $this->createMock(Request::class));
 
@@ -101,7 +101,7 @@ class ExceptionHandlerTest extends TestCase
             ->method('getPreferredFormat')
             ->willReturn('json');
 
-        $handler = new ExceptionHandler($defaultRenderer, $logger);
+        $handler = new ThrowableHandler($defaultRenderer, $logger);
         $jsonRenderer = $this->createRendererMock($exception, 500);
         $handler->addRenderer('json', $jsonRenderer);
 
@@ -134,7 +134,7 @@ class ExceptionHandlerTest extends TestCase
         $renderer = $this->createMock(ErrorRendererInterface::class);
         $renderer->expects($this->once())
             ->method('render')
-            ->with($this->callback(fn($subject) => $subject instanceof HttpException))
+            ->with($this->callback(fn($subject) => $subject instanceof ExtendedHttpException))
             ->willReturn($flattenException);
 
         return $renderer;

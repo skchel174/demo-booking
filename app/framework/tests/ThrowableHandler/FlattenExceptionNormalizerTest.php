@@ -1,20 +1,22 @@
 <?php
 
-namespace Framework\Tests\ExceptionHandler;
+namespace Framework\Tests\ThrowableHandler;
 
-use Framework\ExceptionHandler\ExceptionNormalizer;
+use Framework\ThrowableHandler\ExtendedHttpException;
+use Framework\ThrowableHandler\FlattenExceptionNormalizer;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Symfony\Component\ErrorHandler\Exception\FlattenException;
 
-class ExceptionNormalizerTest extends TestCase
+class FlattenExceptionNormalizerTest extends TestCase
 {
     public function testNormalizeException(): void
     {
-        $exception = new \RuntimeException('Test exception');
+        $exception = new RuntimeException('Test exception');
         $flattenException = $this->createFlattenExceptionMock($exception);
 
-        $normalizer = new ExceptionNormalizer(false);
+        $normalizer = new FlattenExceptionNormalizer(false);
         $data = $normalizer->normalize($flattenException);
 
         $this->assertIsArray($data);
@@ -24,10 +26,10 @@ class ExceptionNormalizerTest extends TestCase
 
     public function testNormalizeExceptionWithDebugMode(): void
     {
-        $exception = new \RuntimeException('Test exception');
+        $exception = new RuntimeException('Test exception');
         $flattenException = $this->createFlattenExceptionMock($exception, true);
 
-        $normalizer = new ExceptionNormalizer(true);
+        $normalizer = new FlattenExceptionNormalizer(true);
         $data = $normalizer->normalize($flattenException);
 
         $this->assertIsArray($data);
@@ -46,6 +48,10 @@ class ExceptionNormalizerTest extends TestCase
             ->willReturn($exception->getMessage());
 
         if ($debug) {
+            $flattenException->expects($this->once())
+                ->method('getClass')
+                ->willReturn(ExtendedHttpException::class);
+
             $previousException = $this->createMock(FlattenException::class);
 
             $previousException->expects($this->once())

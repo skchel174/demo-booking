@@ -1,17 +1,17 @@
 <?php
 
-namespace Framework\ExceptionHandler;
+namespace Framework\ThrowableHandler;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
-interface ExceptionHandlerInterface
+interface ThrowableHandlerInterface
 {
     /**
-     * @param Throwable $e
+     * @param Throwable $throwable
      * @param Request $request
      * @return Response
      */
-    public function handle(Throwable $e, Request $request): Response;
+    public function handle(Throwable $throwable, Request $request): Response;
 }

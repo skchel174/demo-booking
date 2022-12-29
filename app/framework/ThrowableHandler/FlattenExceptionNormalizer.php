@@ -1,13 +1,13 @@
 <?php
 
-namespace Framework\ExceptionHandler;
+namespace Framework\ThrowableHandler;
 
 use ArrayObject;
 use Symfony\Component\ErrorHandler\Exception\FlattenException;
 use Symfony\Component\Serializer\Exception\InvalidArgumentException;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
-class ExceptionNormalizer implements NormalizerInterface
+class FlattenExceptionNormalizer implements NormalizerInterface
 {
     public function __construct(private readonly bool $debug = false)
     {
@@ -22,15 +22,13 @@ class ExceptionNormalizer implements NormalizerInterface
     public function normalize(mixed $object, string $format = null, array $context = []): float|int|bool|ArrayObject|array|string|null
     {
         if (!$object instanceof FlattenException) {
-            throw new InvalidArgumentException(
-                sprintf('The object must implement "%s".', FlattenException::class)
-            );
+            $message = sprintf('The object must implement "%s".', FlattenException::class);
+            throw new InvalidArgumentException($message);
         }
 
         $data = ['message' => $object->getMessage()];
-
         if ($this->debug) {
-            $exception = $object->getPrevious() ?: $object;
+            $exception = $object->getClass() === ExtendedHttpException::class ? $object->getPrevious() : $object;
             $data['class'] = $exception->getClass();
             $data['line'] = $exception->getLine();
             $data['trace'] = $exception->getTrace();
