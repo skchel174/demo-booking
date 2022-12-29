@@ -3,8 +3,8 @@
 namespace Framework\Tests\Controller\ArgumentResolver;
 
 use Framework\Controller\ArgumentResolver;
-use Framework\tests\Controller\DummyController\ArrayController;
-use Framework\tests\Controller\DummyController\InvokableController;
+use Framework\Tests\Controller\DummyController\ArrayController;
+use Framework\Tests\Controller\DummyController\InvokableController;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;

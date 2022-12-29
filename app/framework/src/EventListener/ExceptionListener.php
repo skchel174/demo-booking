@@ -2,8 +2,8 @@
 
 namespace Framework\EventListener;
 
-use Framework\ExceptionHandler\ExceptionHandlerInterface;
 use Framework\Event\ExceptionEvent;
+use Framework\ExceptionHandler\ExceptionHandlerInterface;
 use Framework\ThrowableHandler\ThrowableHandlerInterface;
 
 class ExceptionListener

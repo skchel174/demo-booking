@@ -1,8 +1,9 @@
 <?php
 
-namespace Kernel;
+namespace Framework;
 
 use Exception;
+use LogicException;
 use ReflectionException;
 use Symfony\Component\Config\ConfigCache;
 use Symfony\Component\Config\FileLocator;
@@ -10,8 +11,6 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Dumper\PhpDumper;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
-use Symfony\Component\EventDispatcher\DependencyInjection\RegisterListenersPass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
@@ -21,7 +20,7 @@ use Throwable;
 class Kernel implements KernelInterface
 {
     private string $projectDir;
-    private ContainerInterface $container;
+    private ?ContainerInterface $container = null;
     private array $bundles = [];
 
     public function __construct(private readonly bool $debug)
@@ -35,16 +34,7 @@ class Kernel implements KernelInterface
      */
     public function handle(Request $request): Response
     {
-        if (empty($this->container)) {
-            $this->initializeBundles();
-            $this->initializeContainer();
-        }
-
-//        foreach ($this->bundles as $bundle) {
-//            $bundle->setContainer($this->container);
-//            $bundle->boot();
-//        }
-
+        $this->boot();
         /** @var HttpKernel $kernel */
         $kernel = $this->container->get(HttpKernel::class);
 
@@ -128,7 +118,44 @@ class Kernel implements KernelInterface
     }
 
     /**
+     * @return void
      * @throws ReflectionException
+     */
+    protected function boot(): void
+    {
+        if ($this->container === null) {
+            $this->initializeBundles();
+            $this->initializeContainer();
+        }
+
+        foreach ($this->bundles as $bundle) {
+            $bundle->setContainer($this->container);
+            $bundle->boot();
+        }
+    }
+
+    /**
+     * @return void
+     * @throws ReflectionException
+     */
+    private function initializeBundles(): void
+    {
+        $bundlesList = require $this->getBundlesPath();
+
+        $this->bundles = [];
+        foreach ($bundlesList as $bundleClass) {
+            /** @var BundleInterface $bundle */
+            $bundle = new $bundleClass();
+            if (isset($this->bundles[$bundle->getName()])) {
+                throw new LogicException(sprintf('Bundle with name %s is already registered.', $bundle->getName()));
+            }
+            $this->bundles[$bundle->getName()] = $bundle;
+        }
+    }
+
+    /**
+     * @throws ReflectionException
+     * @throws Exception
      */
     private function initializeContainer(): void
     {
@@ -154,15 +181,9 @@ class Kernel implements KernelInterface
      */
     private function buildContainer(): ContainerBuilder
     {
-        $container = new ContainerBuilder(new ParameterBag());
-        $servicesLocator = new FileLocator('/app');
-        $servicesLoader = new YamlFileLoader($container, $servicesLocator);
-
+        $container = new ContainerBuilder();
         $container->getParameterBag()->add($this->getKernelParameters());
 
-        $servicesLoader->load($this->getProjectDir() . '/framework/bundle/config/services.yaml');
-
-        $extensions = [];
         /** @var BundleInterface $bundle */
         foreach ($this->bundles as $bundle) {
             if ($extension = $bundle->getContainerExtension()) {
@@ -172,44 +193,19 @@ class Kernel implements KernelInterface
             if ($this->debug) {
                 $container->addObjectResource($bundle);
             }
-        }
 
-        foreach ($this->bundles as $bundle) {
             $bundle->build($container);
         }
 
-        foreach ($container->getExtensions() as $extension) {
-            $extensions[] = $extension->getAlias();
-        }
+        $extensions = array_map(fn($extension) => $extension->getAlias(), $container->getExtensions());
+        $configurationPass = new MergeExtensionConfigurationPass($extensions);
+        $container->getCompilerPassConfig()->setMergePass($configurationPass);
 
-        $container->getCompilerPassConfig()->setMergePass(new MergeExtensionConfigurationPass($extensions));
-
+        $servicesLoader = new YamlFileLoader($container, new FileLocator());
         $servicesLoader->load($this->getServicesPath());
 
-        $container->addCompilerPass(new RegisterListenersPass());
         $container->compile();
 
         return $container;
-    }
-
-    /**
-     * @return void
-     * @throws ReflectionException
-     */
-    private function initializeBundles(): void
-    {
-        $bundlesList = require $this->getBundlesPath();
-
-        $this->bundles = [];
-        foreach ($bundlesList as $bundleClass) {
-            /** @var BundleInterface $bundle */
-            $bundle = new $bundleClass();
-            if (isset($this->bundles[$bundle->getName()])) {
-                throw new \LogicException(
-                    sprintf('Bundle with name %s is already registered.', $bundle->getName())
-                );
-            }
-            $this->bundles[$bundle->getName()] = $bundle;
-        }
     }
 }

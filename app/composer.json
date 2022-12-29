@@ -3,8 +3,8 @@
     "autoload": {
         "psr-4": {
             "App\\": "src/",
-            "Framework\\": "framework/",
-            "Framework\\Tests\\": "framework/tests"
+            "Framework\\": "framework/src/",
+            "Framework\\Tests\\": "framework/tests/"
         }
     },
     "autoload-dev": {
