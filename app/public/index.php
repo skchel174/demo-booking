@@ -12,6 +12,9 @@ require_once dirname(__DIR__) . '/vendor/autoload.php';
 const DEBUG = true;
 //const DEBUG = false;
 
-ErrorHandler::register(new ErrorHandler(new BufferingLogger(), DEBUG));
+$errorHandler = new ErrorHandler(new BufferingLogger(), DEBUG);
+ErrorHandler::register($errorHandler);
 
-(new Kernel(DEBUG))->handle(Request::createFromGlobals())->send();
+$kernel = new Kernel('dev', DEBUG);
+$response = $kernel->handle(Request::createFromGlobals());
+$response->send();

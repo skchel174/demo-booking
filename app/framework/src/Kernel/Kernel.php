@@ -14,8 +14,6 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Dumper\PhpDumper;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
-use Symfony\Component\ErrorHandler\BufferingLogger;
-use Symfony\Component\ErrorHandler\ErrorHandler;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
@@ -28,14 +26,8 @@ class Kernel implements KernelInterface
     private ?ContainerInterface $container = null;
     private array $bundles = [];
 
-    public function __construct(private readonly bool $debug)
+    public function __construct(private readonly string $environment, private readonly bool $debug)
     {
-    }
-
-    public static function registerErrorHandler(bool $debug)
-    {
-        $errorHandler = new ErrorHandler(new BufferingLogger(), $debug);
-        ErrorHandler::register($errorHandler);
     }
 
     /**
@@ -97,33 +89,6 @@ class Kernel implements KernelInterface
     }
 
     /**
-     * @return string
-     * @throws ReflectionException
-     */
-    protected function getPackagesDir(): string
-    {
-        return $this->getConfigDir() . '/packages';
-    }
-
-    /**
-     * @return string
-     * @throws ReflectionException
-     */
-    protected function getServicesPath(): string
-    {
-        return $this->getConfigDir() . '/services.yaml';
-    }
-
-    /**
-     * @return string
-     * @throws ReflectionException
-     */
-    protected function getBundlesPath(): string
-    {
-        return $this->getConfigDir() . '/bundles.php';
-    }
-
-    /**
      * @return array
      * @throws ReflectionException
      */
@@ -131,6 +96,7 @@ class Kernel implements KernelInterface
     {
         return [
             'kernel.debug' => $this->debug,
+            'kernel.environment' => $this->environment,
             'kernel.project_dir' => $this->getProjectDir(),
             'kernel.config_dir' => $this->getConfigDir(),
             'kernel.cache_dir' => $this->getCacheDir(),
@@ -173,9 +139,10 @@ class Kernel implements KernelInterface
      */
     protected function configureContainer(ContainerBuilder $container): void
     {
+        $configDir = $this->getConfigDir();
         $servicesLoader = new YamlFileLoader($container, new FileLocator());
-        $servicesLoader->import($this->getPackagesDir() . '/*.yaml');
-        $servicesLoader->load($this->getServicesPath());
+        $servicesLoader->import($configDir . '/packages/*.yaml');
+        $servicesLoader->import($configDir . '/services.yaml');
     }
 
     /**
@@ -184,7 +151,7 @@ class Kernel implements KernelInterface
      */
     private function initializeBundles(): void
     {
-        $bundlesList = require $this->getBundlesPath();
+        $bundlesList = require $this->getConfigDir() . '/bundles.php';
 
         $this->bundles = [];
         foreach ($bundlesList as $bundleClass) {
