@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Framework\Kernel\Kernel;
+use App\Kernel;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\ErrorHandler\BufferingLogger;
 use Symfony\Component\ErrorHandler\ErrorHandler;
