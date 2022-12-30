@@ -3,18 +3,18 @@
 declare(strict_types=1);
 
 use Framework\Kernel\Kernel;
+use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\ErrorHandler\BufferingLogger;
 use Symfony\Component\ErrorHandler\ErrorHandler;
 use Symfony\Component\HttpFoundation\Request;
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
-const DEBUG = true;
-//const DEBUG = false;
+$envManager = new Dotenv();
+$envManager->loadEnv(dirname(__DIR__) . '/.env');
 
-$errorHandler = new ErrorHandler(new BufferingLogger(), DEBUG);
-ErrorHandler::register($errorHandler);
+ErrorHandler::register(new ErrorHandler(new BufferingLogger(), (bool)$_SERVER['APP_DEBUG']));
 
-$kernel = new Kernel('dev', DEBUG);
+$kernel = new Kernel($_SERVER['APP_ENV'], (bool)$_SERVER['APP_DEBUG']);
 $response = $kernel->handle(Request::createFromGlobals());
 $response->send();
