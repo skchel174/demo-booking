@@ -1,16 +1,21 @@
 <?php
 
-namespace Framework;
+namespace Framework\Kernel;
 
 use Exception;
 use LogicException;
+use ReflectionClass;
 use ReflectionException;
 use Symfony\Component\Config\ConfigCache;
+use Symfony\Component\Config\Exception\FileLoaderImportCircularReferenceException;
+use Symfony\Component\Config\Exception\LoaderLoadException;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Dumper\PhpDumper;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+use Symfony\Component\ErrorHandler\BufferingLogger;
+use Symfony\Component\ErrorHandler\ErrorHandler;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
@@ -25,6 +30,12 @@ class Kernel implements KernelInterface
 
     public function __construct(private readonly bool $debug)
     {
+    }
+
+    public static function registerErrorHandler(bool $debug)
+    {
+        $errorHandler = new ErrorHandler(new BufferingLogger(), $debug);
+        ErrorHandler::register($errorHandler);
     }
 
     /**
@@ -48,10 +59,9 @@ class Kernel implements KernelInterface
     protected function getProjectDir(): string
     {
         if (empty($this->projectDir)) {
-            $class = new \ReflectionClass($this::class);
+            $class = new ReflectionClass($this::class);
             $path = explode('/', $class->getFileName());
             $projectDir = '/' . $path[1];
-
             if (file_exists($projectDir . '/composer.json')) {
                 $this->projectDir = $projectDir;
             }
@@ -72,9 +82,27 @@ class Kernel implements KernelInterface
      * @return string
      * @throws ReflectionException
      */
+    protected function getLogsDir(): string
+    {
+        return $this->getProjectDir() . '/var/log';
+    }
+
+    /**
+     * @return string
+     * @throws ReflectionException
+     */
     protected function getConfigDir(): string
     {
         return $this->getProjectDir() . '/config';
+    }
+
+    /**
+     * @return string
+     * @throws ReflectionException
+     */
+    protected function getPackagesDir(): string
+    {
+        return $this->getConfigDir() . '/packages';
     }
 
     /**
@@ -106,6 +134,7 @@ class Kernel implements KernelInterface
             'kernel.project_dir' => $this->getProjectDir(),
             'kernel.config_dir' => $this->getConfigDir(),
             'kernel.cache_dir' => $this->getCacheDir(),
+            'kernel.logs_dir' => $this->getLogsDir(),
         ];
     }
 
@@ -132,6 +161,21 @@ class Kernel implements KernelInterface
             $bundle->setContainer($this->container);
             $bundle->boot();
         }
+    }
+
+    /**
+     * @param ContainerBuilder $container
+     * @return void
+     * @throws FileLoaderImportCircularReferenceException
+     * @throws LoaderLoadException
+     * @throws ReflectionException
+     * @throws Exception
+     */
+    protected function configureContainer(ContainerBuilder $container): void
+    {
+        $servicesLoader = new YamlFileLoader($container, new FileLocator());
+        $servicesLoader->import($this->getPackagesDir() . '/*.yaml');
+        $servicesLoader->load($this->getServicesPath());
     }
 
     /**
@@ -198,11 +242,9 @@ class Kernel implements KernelInterface
         }
 
         $extensions = array_map(fn($extension) => $extension->getAlias(), $container->getExtensions());
-        $configurationPass = new MergeExtensionConfigurationPass($extensions);
-        $container->getCompilerPassConfig()->setMergePass($configurationPass);
+        $container->getCompilerPassConfig()->setMergePass(new MergeExtensionConfigurationPass($extensions));
 
-        $servicesLoader = new YamlFileLoader($container, new FileLocator());
-        $servicesLoader->load($this->getServicesPath());
+        $this->configureContainer($container);
 
         $container->compile();
 

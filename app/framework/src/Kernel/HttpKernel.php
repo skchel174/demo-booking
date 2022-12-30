@@ -1,6 +1,6 @@
 <?php
 
-namespace Framework;
+namespace Framework\Kernel;
 
 use Framework\Controller\ArgumentResolverInterface;
 use Framework\Controller\ControllerResolverInterface;
