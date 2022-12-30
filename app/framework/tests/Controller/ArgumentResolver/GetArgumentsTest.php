@@ -1,13 +1,13 @@
 <?php
 
-namespace Tests\Framework\Controller\ArgumentResolver;
+namespace Framework\Tests\Controller\ArgumentResolver;
 
 use Framework\Controller\ArgumentResolver;
+use Framework\Tests\Controller\DummyController\ArrayController;
+use Framework\Tests\Controller\DummyController\InvokableController;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Tests\Framework\Controller\DummyController\ArrayController;
-use Tests\Framework\Controller\DummyController\InvokableController;
 
 class GetArgumentsTest extends TestCase
 {

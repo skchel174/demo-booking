@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Framework\Controller\DummyController;
+namespace Framework\Tests\Controller\DummyController;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;

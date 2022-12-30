@@ -2,19 +2,18 @@
 
 namespace Framework\Event;
 
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Contracts\EventDispatcher\Event;
 
-class ResponseEvent extends Event
+class RequestEvent extends KernelEvent
 {
-    private Request $request;
     private Response $response;
 
-    public function __construct(Request $request, Response $response)
+    /**
+     * @return bool
+     */
+    public function hasResponse(): bool
     {
-        $this->request = $request;
-        $this->response = $response;
+        return isset($this->response);
     }
 
     /**
@@ -27,6 +26,7 @@ class ResponseEvent extends Event
 
     /**
      * @param Response $response
+     * @return void
      */
     public function setResponse(Response $response): void
     {

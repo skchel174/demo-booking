@@ -3,17 +3,16 @@
 namespace Framework\Event;
 
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Contracts\EventDispatcher\Event;
 
-class ControllerEvent extends Event
+class ControllerEvent extends KernelEvent
 {
     private object|array|string $controller;
-    private Request $request;
 
     public function __construct(object|array|string $controller, Request $request)
     {
+        parent::__construct($request);
+
         $this->controller = $controller;
-        $this->request = $request;
     }
 
     /**
@@ -30,21 +29,5 @@ class ControllerEvent extends Event
     public function setController(object|array|string $controller): void
     {
         $this->controller = $controller;
-    }
-
-    /**
-     * @return Request
-     */
-    public function getRequest(): Request
-    {
-        return $this->request;
-    }
-
-    /**
-     * @param Request $request
-     */
-    public function setRequest(Request $request): void
-    {
-        $this->request = $request;
     }
 }

@@ -1,12 +1,17 @@
+parameters:
+  exceptions: {
+    RuntimeException: { status_code: 401 }
+  }
+
 services:
 
   #Kernel
   Framework\Kernel\HttpKernel:
     public: true
     arguments:
-      - '@Symfony\Component\EventDispatcher\EventDispatcher'
-      - '@Framework\Controller\ControllerResolver'
-      - '@Framework\Controller\ArgumentResolver'
+      $dispatcher: '@Symfony\Component\EventDispatcher\EventDispatcher'
+      $controllerResolver: '@Framework\Controller\ControllerResolver'
+      $argumentResolver: '@Framework\Controller\ArgumentResolver'
 
   #Router
   Framework\Router\RouterFactory: ~
@@ -14,14 +19,54 @@ services:
   Symfony\Component\Routing\Router:
     factory: '@Framework\Router\RouterFactory'
     arguments:
-      - '@service_container'
+      $container: '@service_container'
 
   #Controller
   Framework\Controller\ControllerResolver:
     arguments:
-      - '@service_container'
+      $container: '@service_container'
 
   Framework\Controller\ArgumentResolver: ~
+
+  #ThrowableHandler
+  Framework\ThrowableHandler\ThrowableHandlerInterface: '@Framework\ThrowableHandler\ThrowableHandler'
+
+  Framework\ThrowableHandler\ThrowableHandler:
+    arguments:
+      $defaultRenderer: '@Symfony\Component\ErrorHandler\ErrorRenderer\HtmlErrorRenderer'
+      $logger: '@Psr\Log\LoggerInterface'
+      $exceptionMapping: '%exceptions%'
+    calls:
+      - addRenderer: [ 'json', '@Symfony\Component\ErrorHandler\ErrorRenderer\SerializerErrorRenderer' ]
+
+  #ExceptionRenderers
+  Symfony\Component\ErrorHandler\ErrorRenderer\HtmlErrorRenderer:
+    arguments:
+      $debug: '%kernel.debug%'
+
+  Symfony\Component\ErrorHandler\ErrorRenderer\SerializerErrorRenderer:
+    arguments:
+      $serializer: '@Symfony\Component\Serializer\SerializerInterface'
+      $format: 'json'
+      $fallbackErrorRenderer: '@Symfony\Component\ErrorHandler\ErrorRenderer\HtmlErrorRenderer'
+      $debug: '%kernel.debug%'
+
+  #Serializer
+  Symfony\Component\Serializer\SerializerInterface: '@Symfony\Component\Serializer\Serializer'
+
+  error_serializer:
+    class: Symfony\Component\Serializer\Serializer
+    arguments:
+      $normalizers: [ '@Framework\ThrowableHandler\FlattenExceptionNormalizer' ]
+      $encoders: [ '@Symfony\Component\Serializer\Encoder\JsonEncoder' ]
+
+  Symfony\Component\Serializer\Serializer: '@error_serializer'
+
+  Framework\ThrowableHandler\FlattenExceptionNormalizer:
+    arguments:
+      $debug: '%kernel.debug%'
+
+  Symfony\Component\Serializer\Encoder\JsonEncoder: ~
 
   #EventDispatcher
   Symfony\Component\EventDispatcher\EventDispatcher: ~
@@ -31,6 +76,12 @@ services:
   #Events
   Framework\EventListener\RouterListener:
     arguments:
-      - '@Symfony\Component\Routing\Router'
+      $router: '@Symfony\Component\Routing\Router'
     tags:
       - { name: 'kernel.event_listener', event: Framework\Event\RequestEvent }
+
+  Framework\EventListener\ExceptionListener:
+    arguments:
+      $handler: '@Framework\ThrowableHandler\ThrowableHandlerInterface'
+    tags:
+      - { name: 'kernel.event_listener', event: Framework\Event\ExceptionEvent }

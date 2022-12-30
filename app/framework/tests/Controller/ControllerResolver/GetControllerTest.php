@@ -1,14 +1,14 @@
 <?php
 
-namespace Tests\Framework\Controller\ControllerResolver;
+namespace Framework\Tests\Controller\ControllerResolver;
 
 use Framework\Controller\ControllerResolver;
+use Framework\Tests\Controller\DummyController\ArrayController;
+use Framework\Tests\Controller\DummyController\InvokableController;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Tests\Framework\Controller\DummyController\ArrayController;
-use Tests\Framework\Controller\DummyController\InvokableController;
 
 class GetControllerTest extends TestCase
 {
