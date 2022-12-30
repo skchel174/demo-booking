@@ -67,7 +67,7 @@ class Kernel implements KernelInterface
      */
     protected function getCacheDir(): string
     {
-        return $this->getProjectDir() . '/var/cache';
+        return $this->getProjectDir() . '/var/cache/' . $this->environment;
     }
 
     /**
