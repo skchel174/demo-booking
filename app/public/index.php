@@ -16,8 +16,8 @@ if (!isset($_ENV['APP_DEBUG'])) {
     $_ENV['APP_DEBUG'] = $_SERVER['APP_DEBUG'] = $_ENV['APP_ENV'] === 'prod' ? 0 : 1;
 }
 
-$handler = new ErrorHandler(new BufferingLogger());
-ErrorHandler::register($handler, (bool)$_ENV['APP_DEBUG']);
+$errorHandler = new ErrorHandler(new BufferingLogger(), (bool)$_ENV['APP_DEBUG']);
+ErrorHandler::register($errorHandler);
 
 $kernel = new Kernel($_ENV['APP_ENV'], (bool)$_ENV['APP_DEBUG']);
 $response = $kernel->handle(Request::createFromGlobals());
