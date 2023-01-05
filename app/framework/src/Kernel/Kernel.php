@@ -155,13 +155,17 @@ class Kernel implements KernelInterface
         $bundlesList = require $this->getConfigDir() . '/bundles.php';
 
         $this->bundles = [];
-        foreach ($bundlesList as $bundleClass) {
-            /** @var BundleInterface $bundle */
-            $bundle = new $bundleClass();
-            if (isset($this->bundles[$bundle->getName()])) {
-                throw new LogicException(sprintf('Bundle with name %s is already registered.', $bundle->getName()));
+        foreach ($bundlesList as $bundleClass => $env) {
+            if ($env[$this->environment] ?? $env['all'] ?? false) {
+                /** @var BundleInterface $bundle */
+                $bundle = new $bundleClass();
+                if (isset($this->bundles[$bundle->getName()])) {
+                    throw new LogicException(
+                        sprintf('Bundle with name %s is already registered.', $bundle->getName())
+                    );
+                }
+                $this->bundles[$bundle->getName()] = $bundle;
             }
-            $this->bundles[$bundle->getName()] = $bundle;
         }
     }
 
