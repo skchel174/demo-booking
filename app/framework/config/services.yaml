@@ -1,10 +1,7 @@
 parameters:
-  exceptions: {
-    RuntimeException: { status_code: 401 }
-  }
+  exceptions: {}
 
 services:
-
   #Kernel
   Framework\Kernel\HttpKernel:
     public: true

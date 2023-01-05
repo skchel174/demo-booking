@@ -14,6 +14,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Dumper\PhpDumper;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
@@ -42,6 +43,23 @@ class Kernel implements KernelInterface
         $kernel = $this->container->get(HttpKernel::class);
 
         return $kernel->handle($request);
+    }
+
+    /**
+     * @return void
+     * @throws ReflectionException
+     */
+    protected function boot(): void
+    {
+        if ($this->container === null) {
+            $this->initializeBundles();
+            $this->initializeContainer();
+        }
+
+        foreach ($this->bundles as $bundle) {
+            $bundle->setContainer($this->container);
+            $bundle->boot();
+        }
     }
 
     /**
@@ -105,31 +123,6 @@ class Kernel implements KernelInterface
     }
 
     /**
-     * @return string
-     */
-    protected function getContainerClass(): string
-    {
-        return 'ProjectServiceContainer';
-    }
-
-    /**
-     * @return void
-     * @throws ReflectionException
-     */
-    protected function boot(): void
-    {
-        if ($this->container === null) {
-            $this->initializeBundles();
-            $this->initializeContainer();
-        }
-
-        foreach ($this->bundles as $bundle) {
-            $bundle->setContainer($this->container);
-            $bundle->boot();
-        }
-    }
-
-    /**
      * @param ContainerBuilder $container
      * @return void
      * @throws FileLoaderImportCircularReferenceException
@@ -141,8 +134,16 @@ class Kernel implements KernelInterface
     {
         $configDir = $this->getConfigDir();
         $servicesLoader = new YamlFileLoader($container, new FileLocator());
+
         $servicesLoader->import($configDir . '/packages/*.yaml');
+        if (is_dir($configDir . '/packages/' . $this->environment)) {
+            $servicesLoader->import($configDir . '/packages/' . $this->environment . '/*.yaml');
+        }
+
         $servicesLoader->import($configDir . '/services.yaml');
+        if (is_file($configDir . '/services_' . $this->environment . '.yaml')) {
+            $servicesLoader->import($configDir . '/services_' . $this->environment . '.yaml');
+        }
     }
 
     /**
@@ -170,18 +171,16 @@ class Kernel implements KernelInterface
      */
     private function initializeContainer(): void
     {
-        $cacheFile = $this->getCacheDir() . '/container.php';
-        $configCache = new ConfigCache($cacheFile, $this->debug);
+        $file = $this->getCacheDir() . '/' . $this->getContainerClass() . '.php';
+        $cache = new ConfigCache($file, $this->debug);
 
-        if (!$configCache->isFresh()) {
+        if (!$cache->isFresh()) {
             $container = $this->buildContainer();
-            $dumper = new PhpDumper($container);
-            $dump = $dumper->dump(['class' => $this->getContainerClass()]);
-            $configCache->write($dump, $container->getResources());
+            $container->compile();
+            $this->dumpContainer($container, $cache);
         }
 
-        require_once $cacheFile;
-
+        require_once $file;
         $containerClass = $this->getContainerClass();
         $this->container = new $containerClass();
     }
@@ -192,8 +191,8 @@ class Kernel implements KernelInterface
      */
     private function buildContainer(): ContainerBuilder
     {
-        $container = new ContainerBuilder();
-        $container->getParameterBag()->add($this->getKernelParameters());
+        $kernelParameters = new ParameterBag($this->getKernelParameters());
+        $container = new ContainerBuilder($kernelParameters);
 
         /** @var BundleInterface $bundle */
         foreach ($this->bundles as $bundle) {
@@ -213,8 +212,26 @@ class Kernel implements KernelInterface
 
         $this->configureContainer($container);
 
-        $container->compile();
-
         return $container;
+    }
+
+    /**
+     * @param ContainerBuilder $container
+     * @param ConfigCache $cache
+     * @return void
+     */
+    private function dumpContainer(ContainerBuilder $container, ConfigCache $cache): void
+    {
+        $dumper = new PhpDumper($container);
+        $dump = $dumper->dump(['class' => $this->getContainerClass()]);
+        $cache->write($dump, $container->getResources());
+    }
+
+    /**
+     * @return string
+     */
+    private function getContainerClass(): string
+    {
+        return ucfirst(strtolower($this->environment)) . ($this->debug ? 'Debug' : '') . 'Container';
     }
 }
