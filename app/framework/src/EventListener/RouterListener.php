@@ -3,6 +3,8 @@
 namespace Framework\EventListener;
 
 use Framework\Event\RequestEvent;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\Router;
 
@@ -27,7 +29,12 @@ class RouterListener
         $requestContext->fromRequest($request);
         $this->router->setContext($requestContext);
 
-        $parameters = $this->router->match($requestContext->getPathInfo());
+        try {
+            $parameters = $this->router->match($requestContext->getPathInfo());
+        } catch (ResourceNotFoundException $e) {
+            $message = sprintf('Not route found for %s %s', $request->getMethod(), $request->getUri());
+            throw new HttpException(404, $message, $e);
+        }
 
         $request->attributes->add($parameters);
     }

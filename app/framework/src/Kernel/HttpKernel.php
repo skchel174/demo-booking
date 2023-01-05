@@ -10,10 +10,10 @@ use Framework\Event\ExceptionEvent;
 use Framework\Event\RequestEvent;
 use Framework\Event\ResponseEvent;
 use Framework\Event\TerminateEvent;
-use Framework\Exception\NotFoundHttpException;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
 
 class HttpKernel implements KernelInterface
@@ -54,10 +54,8 @@ class HttpKernel implements KernelInterface
         $request = $event->getRequest();
 
         if (!$controller = $this->controllerResolver->getController($request)) {
-            throw new NotFoundHttpException(sprintf(
-                'Not found controller for path "%s". The route is wrongly configured.',
-                $request->getPathInfo()
-            ));
+            $message = sprintf('Not found controller for path "%s"', $request->getUri());
+            throw new HttpException(404, $message);
         }
 
         $event = new ControllerEvent($controller, $request);
