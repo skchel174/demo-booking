@@ -9,6 +9,7 @@ use Framework\Event\ControllerEvent;
 use Framework\Event\ExceptionEvent;
 use Framework\Event\RequestEvent;
 use Framework\Event\ResponseEvent;
+use Framework\Event\TerminateEvent;
 use Framework\Exception\NotFoundHttpException;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -73,6 +74,16 @@ class HttpKernel implements KernelInterface
         $response = $controller(...$arguments);
 
         return $this->handleResponse($response, $request);
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return void
+     */
+    public function terminate(Request $request, Response $response): void
+    {
+        $this->dispatcher->dispatch(new TerminateEvent($request, $response));
     }
 
     /**

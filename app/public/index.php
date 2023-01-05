@@ -19,6 +19,10 @@ if (!isset($_ENV['APP_DEBUG'])) {
 $errorHandler = new ErrorHandler(new BufferingLogger(), (bool)$_ENV['APP_DEBUG']);
 ErrorHandler::register($errorHandler);
 
+$request = Request::createFromGlobals();
+
 $kernel = new Kernel($_ENV['APP_ENV'], (bool)$_ENV['APP_DEBUG']);
-$response = $kernel->handle(Request::createFromGlobals());
+$response = $kernel->handle($request);
 $response->send();
+
+$kernel->terminate($request, $response);

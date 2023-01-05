@@ -46,6 +46,19 @@ class Kernel implements KernelInterface
     }
 
     /**
+     * @param Request $request
+     * @param Response $response
+     * @return void
+     */
+    public function terminate(Request $request, Response $response): void
+    {
+        if ($this->container->has(HttpKernel::class)) {
+            $kernel = $this->container->get(HttpKernel::class);
+            $kernel->terminate($request, $response);
+        }
+    }
+
+    /**
      * @return void
      * @throws ReflectionException
      */
