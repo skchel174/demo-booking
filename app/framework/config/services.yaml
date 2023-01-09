@@ -41,13 +41,18 @@ services:
 
   Framework\ThrowableHandler\ThrowableHandler:
     arguments:
-      $defaultRenderer: '@Symfony\Component\ErrorHandler\ErrorRenderer\HtmlErrorRenderer'
+      $defaultRenderer: '@Framework\ThrowableHandler\HtmlRenderer'
       $logger: '@Psr\Log\LoggerInterface'
       $exceptionMapping: '%exceptions%'
     calls:
       - addRenderer: [ 'json', '@Symfony\Component\ErrorHandler\ErrorRenderer\SerializerErrorRenderer' ]
 
   #ExceptionRenderers
+  Framework\ThrowableHandler\HtmlRenderer:
+    arguments:
+      $renderer: '@Symfony\Component\ErrorHandler\ErrorRenderer\HtmlErrorRenderer'
+      $debug: '%kernel.debug%'
+
   Symfony\Component\ErrorHandler\ErrorRenderer\HtmlErrorRenderer:
     arguments:
       $debug: '%kernel.debug%'
