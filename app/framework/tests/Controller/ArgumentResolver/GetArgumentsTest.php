@@ -3,13 +3,11 @@
 namespace Framework\Tests\Controller\ArgumentResolver;
 
 use Framework\Controller\ArgumentResolver;
-use Framework\Tests\Controller\DummyController\ArrayController;
-use Framework\Tests\Controller\DummyController\InvokableController;
-use PHPUnit\Framework\TestCase;
+use Framework\Tests\Controller\ControllerTest;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class GetArgumentsTest extends TestCase
+class GetArgumentsTest extends ControllerTest
 {
     /**
      * @dataProvider controllerProvider
@@ -54,14 +52,5 @@ class GetArgumentsTest extends TestCase
         $controller = fn(string $name) => new Response();
         $resolver = new ArgumentResolver();
         $resolver->getArguments($request, $controller);
-    }
-
-    private function controllerProvider(): array
-    {
-        return [
-            'array controller' => [[new ArrayController(), 'index']],
-            'invokable controller' => [new InvokableController()],
-            'callback controller' => [fn(Request $request, string $name = 'John Doe') => new Response()],
-        ];
     }
 }

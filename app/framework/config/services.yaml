@@ -1,10 +1,7 @@
 parameters:
-  exceptions: {
-    RuntimeException: { status_code: 401 }
-  }
+  exceptions: {}
 
 services:
-
   #Kernel
   Framework\Kernel\HttpKernel:
     public: true
@@ -14,12 +11,23 @@ services:
       $argumentResolver: '@Framework\Controller\ArgumentResolver'
 
   #Router
-  Framework\Router\RouterFactory: ~
-
   Symfony\Component\Routing\Router:
     factory: '@Framework\Router\RouterFactory'
     arguments:
       $container: '@service_container'
+
+  Framework\Router\RouterFactory:
+    arguments:
+      $loader: '@Symfony\Component\Routing\Loader\ClosureLoader'
+      $resource: '@Framework\Router\RoutesResource'
+
+  Symfony\Component\Routing\Loader\ClosureLoader:
+    arguments:
+      $env: '%kernel.environment%'
+
+  Framework\Router\RoutesResource:
+    arguments:
+      $configDir: '%kernel.config_dir%'
 
   #Controller
   Framework\Controller\ControllerResolver:
@@ -33,13 +41,18 @@ services:
 
   Framework\ThrowableHandler\ThrowableHandler:
     arguments:
-      $defaultRenderer: '@Symfony\Component\ErrorHandler\ErrorRenderer\HtmlErrorRenderer'
+      $defaultRenderer: '@Framework\ThrowableHandler\HtmlRenderer'
       $logger: '@Psr\Log\LoggerInterface'
       $exceptionMapping: '%exceptions%'
     calls:
       - addRenderer: [ 'json', '@Symfony\Component\ErrorHandler\ErrorRenderer\SerializerErrorRenderer' ]
 
   #ExceptionRenderers
+  Framework\ThrowableHandler\HtmlRenderer:
+    arguments:
+      $renderer: '@Symfony\Component\ErrorHandler\ErrorRenderer\HtmlErrorRenderer'
+      $debug: '%kernel.debug%'
+
   Symfony\Component\ErrorHandler\ErrorRenderer\HtmlErrorRenderer:
     arguments:
       $debug: '%kernel.debug%'
