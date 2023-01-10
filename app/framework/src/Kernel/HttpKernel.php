@@ -42,7 +42,7 @@ class HttpKernel implements KernelInterface
      * @param Request $request
      * @return Response
      */
-    public function handleRequest(Request $request): Response
+    private function handleRequest(Request $request): Response
     {
         $event = new RequestEvent($request);
         $this->dispatcher->dispatch($event);
